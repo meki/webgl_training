@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="description" content="">
+	<meta name="author" content="">
+	<link rel="shortcut icon" href="favicon.png">
+	<title></title>
+
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.css">
+</head>
+
+<body style="position: relative; text-align:center;">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.11/lodash.min.js"></script>
+<script src="http://code.jquery.com/jquery-3.3.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.js"></script>
+<script src="js/three.js/build/three.min.js"></script>
+<script src="js/three.js/examples/js/loaders/STLLoader.js"></script>
+
+<div class="container" style="width: 1024; margin: 0 auto;">
+	<form style="margin-top: 3em; margin-bottom: 3em;">
+		<input type="file">
+	</form>
+	
+	<canvas class="preview"></canvas>
+</div>
+
+<script>
+window.addEventListener("DOMContentLoaded", init);
+
+// シーン
+var scene = new THREE.Scene();
+// 3D model
+var model = null;
+
+function init() {
+  const width = 960;
+  const height = 540;
+
+  // レンダラーを作成
+  const renderer = new THREE.WebGLRenderer({
+    canvas: document.querySelector(".preview")
+  });
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setSize(width, height);
+
+  // カメラを作成
+  const camera = new THREE.PerspectiveCamera(
+    45,
+    width / height,
+    1,
+    10000
+  );
+  camera.position.set(0, 0, +1000);
+
+  // 平行光源
+  const light = new THREE.DirectionalLight(0xffffff);
+  light.intensity = 2; // 光の強さを倍に
+  light.position.set(1, 1, 1);
+  // シーンに追加
+  scene.add(light);
+
+  // 初回実行
+  tick();
+
+  function tick() {
+    requestAnimationFrame(tick);
+
+    // 箱を回転させる
+	if(model) 
+	{
+		model.rotation.x += 0.01;
+	    model.rotation.y += 0.01;
+	}
+
+    // レンダリング
+    renderer.render(scene, camera);
+  }
+}
+
+// ------------------------------
+
+$(function(){
+  //画像ファイルプレビュー表示のイベント追加 fileを選択時に発火するイベントを登録
+  $('form').on('change', 'input[type="file"]', function(e) {
+    var file = e.target.files[0];
+    var reader = new FileReader();
+
+    // ファイル読み込みが完了した際のイベント登録
+    reader.onload = (function(file) {
+      return function(e) {
+		// STL ファイルを読み込み
+		var loader = new THREE.STLLoader();
+        loader.load(e.target.result, function(geometry){
+			model = new THREE.Mesh( geometry )
+			scene.add( model );
+		});
+      };
+    })(file);
+
+    reader.readAsDataURL(file);
+  });
+});
+
+
+</script>
+</body>
+
+</html>
